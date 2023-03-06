@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiniteFields", "FiniteFields\FiniteFields.csproj", "{0E80FD07-9248-4FAC-8829-9D2CF45384FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E80FD07-9248-4FAC-8829-9D2CF45384FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E80FD07-9248-4FAC-8829-9D2CF45384FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E80FD07-9248-4FAC-8829-9D2CF45384FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E80FD07-9248-4FAC-8829-9D2CF45384FC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {241B6B52-D5DB-4BC9-9210-D79C8A408ED5}
+	EndGlobalSection
+EndGlobal
