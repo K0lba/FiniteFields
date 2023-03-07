@@ -86,8 +86,18 @@ namespace FiniteFields
 
         public FiniteFieldElements Power(int power)
         {
-
-            return this;
+            int deg = power%((int)Math.Pow(f.p,f.n) - 1);
+            if(deg == 0) return f.Create1();
+            if (deg == 1) return this;
+            else
+            {
+                return (Power(deg/2) * Power(deg/2));
+            }
         }
+        public FiniteFieldElements Reversed()
+        {
+            return this.Power((int)Math.Pow(f.p,f.n)-2);
+        }
+        public static FiniteFieldElements operator /(FiniteFieldElements a, FiniteFieldElements b) => a * b.Reversed();
     }
 }
