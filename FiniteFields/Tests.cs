@@ -37,7 +37,7 @@ namespace FiniteFields
         public void Multiplication1()
         {
             var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
-            var element1 = new FiniteFieldElements(new int[] { 1, 0, 1 }, GF4);
+            var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
             var element2 = GF4.Create0();
             var mult = element1 * element2;
             mult = mult + element1;
