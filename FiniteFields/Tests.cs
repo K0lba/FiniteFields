@@ -10,6 +10,11 @@ namespace FiniteFields
 {
     internal class Tests
     {
+        static void Main(string[] args)
+        {
+            
+        }
+        
         [Test]
         public void Sum1()
         {

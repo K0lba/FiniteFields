@@ -195,4 +195,5 @@ namespace FiniteFields
                 throw new Exception("Поле должно быть характеристики 2");
         }
     }
+
 }
