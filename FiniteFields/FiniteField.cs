@@ -64,8 +64,15 @@ namespace FiniteFields
         public override bool Equals(object? obj)
         {
             var field = obj as FiniteField;
+#pragma warning disable CS8602 // Разыменование вероятной пустой ссылки.
             if (field.p == p && field.n == n && field.q == q) return true;
+#pragma warning restore CS8602 // Разыменование вероятной пустой ссылки.
             return false;
+        }
+
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
         }
     }
     public class FiniteFieldElements
