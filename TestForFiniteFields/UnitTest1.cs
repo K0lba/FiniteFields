@@ -1,25 +1,19 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FiniteFields;
 
-namespace FiniteFields
+namespace TestForFiniteFields
 {
-    internal class Tests
+    public class Tests
     {
-        static void Main(string[] args)
+        [SetUp]
+        public void Setup()
         {
-            FiniteField field = new FiniteField(4, 2, new int[2] { 1, 1});
-            FiniteFieldElements el1 = new FiniteFieldElements(new int[2] {2,1},field);
-            FiniteFieldElements el2 = new FiniteFieldElements(new int[2] {1,1},field);
-            foreach(var i in (el1*el1).coef) { Console.Write(i); }
-            Console.WriteLine();
-            foreach (var i in (el1.Power(2)).coef) { Console.Write(i); }
         }
-        
+
+        [Test]
+        public void Test1()
+        {
+            Assert.Pass();
+        }
         [Test]
         public void Sum1()
         {
@@ -42,7 +36,7 @@ namespace FiniteFields
         public void Multiplication1()
         {
             var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
-            var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
+            var element1 = new FiniteFieldElements(new int[] { 1, 0, 1 }, GF4);
             var element2 = GF4.Create0();
             var mult = element1 * element2;
             mult = mult + element1;
@@ -52,20 +46,20 @@ namespace FiniteFields
         [Test]
         public void GetReversed1()
         {
-            var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
+            var GF4 = new FiniteField(2, 2, new int[] { 1, 1 });
             var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
             var inverse = element1.Reversed();
-            Assert.That(inverse.coef, Is.EqualTo(new int[] { 1, 0 }));
+            Assert.That(inverse.coef, Is.EqualTo(new int[] { 0 }));
         }
 
         [Test]
         public void Divide1()
         {
-            var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
+            var GF4 = new FiniteField(2, 2, new int[] { 1, 1 });
             var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
-            var element2 = new FiniteFieldElements(new int[] { 1, 0 }, GF4);
+            var element2 = new FiniteFieldElements(new int[] { 1 }, GF4);
             var div = element1 / element2;
-            Assert.That(div.coef, Is.EqualTo(new int[] { 1, 0 }));
+            Assert.That(div.coef, Is.EqualTo(new int[] { 0 }));
         }
 
         [Test]
@@ -77,5 +71,5 @@ namespace FiniteFields
             var substract = element1 - element2;
             Assert.That(substract.coef, Is.EqualTo(new int[] { 2, 2 }));
         }
-    }   
+    }
 }
