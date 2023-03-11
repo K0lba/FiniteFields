@@ -52,20 +52,20 @@ namespace FiniteFields
         [Test]
         public void GetReversed1()
         {
-            var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
+            var GF4 = new FiniteField(2, 2, new int[] { 1, 1 });
             var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
             var inverse = element1.Reversed();
-            Assert.That(inverse.coef, Is.EqualTo(new int[] { 1, 0 }));
+            Assert.That(inverse.coef, Is.EqualTo(new int[] { 1 }));
         }
 
         [Test]
         public void Divide1()
         {
-            var GF4 = new FiniteField(2, 2, new int[] { 1, 1, 1 });
+            var GF4 = new FiniteField(2, 2, new int[] { 1, 1 });
             var element1 = new FiniteFieldElements(new int[] { 1, 1 }, GF4);
-            var element2 = new FiniteFieldElements(new int[] { 1, 0 }, GF4);
+            var element2 = new FiniteFieldElements(new int[] { 1 }, GF4);
             var div = element1 / element2;
-            Assert.That(div.coef, Is.EqualTo(new int[] { 1, 0 }));
+            Assert.That(div.coef, Is.EqualTo(new int[] { 0 }));
         }
 
         [Test]
