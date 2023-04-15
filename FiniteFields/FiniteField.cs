@@ -1,4 +1,6 @@
-﻿namespace FiniteFields
+﻿using System.Runtime.CompilerServices;
+
+namespace FiniteFields
 { 
     public class FiniteField
     {
@@ -13,22 +15,22 @@
             this.p = p;
             this.q = q;          
         }
-        public FiniteFieldElements Create0()
+        public FiniteFieldElement Create0()
         {
-            return new FiniteFieldElements(new int[1] { 0 }, this);
+            return new FiniteFieldElement(new int[1] { 0 }, this);
         }
-        public FiniteFieldElements Create1()
+        public FiniteFieldElement Create1()
         {
-            return new FiniteFieldElements(new int[1] { 1 }, this);
+            return new FiniteFieldElement(new int[1] { 1 }, this);
         }
 
 
-        public FiniteFieldElements CreateElementFromBinary(byte[] bytes)
+        public FiniteFieldElement CreateElementFromBinary(byte Byte)
         {
             if (p != 2) throw new Exception("Поле должно быть характеристики 2");
-            
-            int n = BitConverter.ToInt32(bytes);
-            int[] res = new int[n];
+
+            int n = Byte;
+            int[] res = new int[8];
             int counter = 0;
             while (n > 0)
             {
@@ -36,7 +38,7 @@
                 n = n / 2;
                 counter++;
             }
-            return new FiniteFieldElements(FiniteFieldElements.KillZeros(res), this);
+            return new FiniteFieldElement(FiniteFieldElement.KillZeros(res), this);
         }
 
         public override bool Equals(object? obj)
@@ -52,11 +54,11 @@
             throw new NotImplementedException();
         }
     }
-    public class FiniteFieldElements
+    public class FiniteFieldElement
     {
         public int[] coef { get; set; }
         public FiniteField f { get; set; }
-        public FiniteFieldElements(int[] coef, FiniteField f)
+        public FiniteFieldElement(int[] coef, FiniteField f)
         {
             if (coef.Length - 1 > f.n) 
                 throw new Exception("Размерность элемента не совпадает с размерностью заданного поля");
@@ -82,7 +84,7 @@
             }
             else { return (n % charac); }
         }
-        public static FiniteFieldElements operator -(FiniteFieldElements a)
+        public static FiniteFieldElement operator -(FiniteFieldElement a)
         {
             int deg = a.coef.Length;
             int[] result = new int[deg];
@@ -90,46 +92,47 @@
             {
                 result[i] = Mod(-a.coef[i],a.f.p);
             }
-            return new FiniteFieldElements(KillZeros(result), a.f);
+            return new FiniteFieldElement(KillZeros(result), a.f);
         }
 
-        public static FiniteFieldElements operator +(FiniteFieldElements a, FiniteFieldElements b)
+        public static FiniteFieldElement operator +(FiniteFieldElement a, FiniteFieldElement b)
         {
             if (!a.f.Equals(b.f))
                 throw new InvalidOperationException();
-            int deg = Math.Max(a.coef.Length, b.coef.Length);
-            int lim = Math.Min(a.coef.Length, b.coef.Length);
-            int[] result = new int[deg];
-            _ = (a.coef.Length == deg) ? result = a.coef : result = b.coef;
+            int[] remainder = a.coef;
+            int deg = Math.Max(remainder.Length, b.coef.Length);
+            int lim = Math.Min(remainder.Length, b.coef.Length);
+            int[] result;
+            _ = (remainder.Length == deg) ? result = remainder : result = b.coef;
             for (int i = 0; i < lim; i++)
             {
-                result[i] = Mod(a.coef[i] + b.coef[i], a.f.p);
+                result[i] = Mod(remainder[i] + b.coef[i], a.f.p);
             }
-            return new FiniteFieldElements(KillZeros(result), a.f);
+            return new FiniteFieldElement(KillZeros(result), a.f);
         }
 
-        public static FiniteFieldElements operator -(FiniteFieldElements a, FiniteFieldElements b) => a + (-b);
+        public static FiniteFieldElement operator -(FiniteFieldElement a, FiniteFieldElement b) => a + (-b);
 
-        public static FiniteFieldElements operator %(int[] a, FiniteFieldElements b)
+        private static FiniteFieldElement PolynomDiv(int[] a, int[] b, FiniteField f)
         {
-            if(a.Length < b.coef.Length) { return new FiniteFieldElements(a,b.f); }
+            if(a.Length < b.Length) { return new FiniteFieldElement(a, f); }
             int n = (int)a.Length - 1;
-            int m = (int)b.coef.Length - 1;
+            int m = (int)b.Length - 1;
             int[] result = a;
             int[] Q = new int[n - m + 1];
             for (int i = n; i >= m; i--)
             {
-                Q[i - m] = Mod(result[i] * (int)Math.Pow(b.coef[m],b.f.p-2), b.f.p);
+                Q[i - m] = Mod(result[i] * (int)Math.Pow(b[m],f.p-2), f.p);
                 for (int j = m; j >= 0; j--) 
                 {
-                    result[i - m + j] = Mod(result[i - m + j] - b.coef[j] * Q[i - m], b.f.p);
+                    result[i - m + j] = Mod(result[i - m + j] - b[j] * Q[i - m], f.p);
                 }
             }
             Array.Resize(ref result, m);
-            return new FiniteFieldElements(KillZeros(result), b.f);
+            return new FiniteFieldElement(KillZeros(result), f);
 
         }
-        public static FiniteFieldElements operator *(FiniteFieldElements a, FiniteFieldElements b)
+        public static FiniteFieldElement operator *(FiniteFieldElement a, FiniteFieldElement b)
         {
             if (!a.f.Equals(b.f))
                 throw new InvalidOperationException();
@@ -142,11 +145,10 @@
                     result[i + j] = Mod(result[i+j] + a.coef[i] * b.coef[j],a.f.p);
                 }
             }
-            FiniteFieldElements res = result % new FiniteFieldElements(a.f.q,a.f);
-            return res;
+            return PolynomDiv(result, a.f.q, a.f);
         }
 
-        public FiniteFieldElements Power(int power)
+        public FiniteFieldElement Power(int power)
         {
             int deg = power % ((int)Math.Pow(f.p, f.n) - 1);
             if (deg == 0) return f.Create1();
@@ -160,28 +162,29 @@
                 return this * Power(deg - 1);
             }
         }
-        public FiniteFieldElements Inverse()
+        public FiniteFieldElement Inverse()
         {
             return this.Power((int)Math.Pow(f.p, f.n) - 2);
         }
-        public static FiniteFieldElements operator /(FiniteFieldElements a, FiniteFieldElements b) => a * b.Inverse();
+        public static FiniteFieldElement operator /(FiniteFieldElement a, FiniteFieldElement b) => a * b.Inverse();
 
-        public byte[] GetToBinary()
+        public byte GetToBinary()
         {
             if (f.p != 2) throw new Exception("Поле должно быть характеристики 2");
-            return BitConverter.GetBytes(Gorner(2,coef)); 
+            return (byte)Horner(2,coef); 
         }
-        private int Gorner(int x, int[] a, int i = 0)
+        private int Horner(int x, int[] a, int i = 0)
         {
             if (i >= a.Length)
                 return 0;
-            return a[i] + x * Gorner(x, a, i + 1);
+            return a[i] + x * Horner(x, a, i + 1);
         }
     }
 
     public class Program
     {
-        public static void Main(string[] args) { }
+        public static void Main(string[] args) {}
     }
 
 }
+
