@@ -1,14 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
-namespace FiniteFields
+﻿namespace FiniteFields
 { 
     public class FiniteField
     {
@@ -18,10 +8,10 @@ namespace FiniteFields
 
         public FiniteField(int p, int n, int[] q)
         {
+            if (q.Length - 1 != n) throw new Exception("Передан некорректный неприводимый многочлен");
             this.n = n;
             this.p = p;
-            this.q = q;
-
+            this.q = q;          
         }
         public FiniteFieldElements Create0()
         {
@@ -31,42 +21,29 @@ namespace FiniteFields
         {
             return new FiniteFieldElements(new int[1] { 1 }, this);
         }
-        public FiniteFieldElements GetBynaryRepres(int n)
+
+
+        public FiniteFieldElements CreateElementFromBinary(byte[] bytes)
         {
-            if (p == 2)
+            if (p != 2) throw new Exception("Поле должно быть характеристики 2");
+            
+            int n = BitConverter.ToInt32(bytes);
+            int[] res = new int[n];
+            int counter = 0;
+            while (n > 0)
             {
-                string conv = Convert.ToString(n, 2);
-                int[] res = conv.Split().Select(x => Convert.ToInt32(x)).ToArray();
-                return new FiniteFieldElements(res, this);
+                res[counter] = n % 2;
+                n = n / 2;
+                counter++;
             }
-            else
-                throw new Exception("Поле должно быть характеристики 2");
-        }
-        public int GetDecimalRepres(FiniteFieldElements a)
-        {
-            if (p == 2)
-            {
-                return Convert.ToInt32(Convert.ToString(Convert.ToInt32(string.Join("", a.coef), 2), 10));
-            }
-            else
-                throw new Exception("Поле должно быть характеристики 2");
-        }
-        public FiniteFieldElements GetFromBinary(byte[] bytes)
-        {
-            if (p == 2)
-            {
-                int n = BitConverter.ToInt32(bytes, 0);
-                return GetBynaryRepres(n);
-            }
-            else throw new Exception("Поле должно быть характеристики 2");
+            return new FiniteFieldElements(FiniteFieldElements.KillZeros(res), this);
         }
 
         public override bool Equals(object? obj)
         {
-            var field = obj as FiniteField;
-#pragma warning disable CS8602 // Разыменование вероятной пустой ссылки.
+            var field = (obj as FiniteField)!;
             if (field.p == p && field.n == n && field.q == q) return true;
-#pragma warning restore CS8602 // Разыменование вероятной пустой ссылки.
+
             return false;
         }
 
@@ -81,18 +58,29 @@ namespace FiniteFields
         public FiniteField f { get; set; }
         public FiniteFieldElements(int[] coef, FiniteField f)
         {
-            //if (coef.Length != f.n) throw new Exception("Размерность элемента не совпадает с размерностью заданного поля");
+            if (coef.Length - 1 > f.n) 
+                throw new Exception("Размерность элемента не совпадает с размерностью заданного поля");
             this.coef = coef;
             this.f = f;
         }
 
-        public static int Mod(int n, int charac)
+        public static int[] KillZeros(int[] a)
         {
-            if ((n %= charac) < 0)
+            if(a.Length == 0) return a;
+            while (a[a.Length - 1] == 0)
             {
-                return n + charac;
+                if (a.Length - 1 == 0) break;
+                a = a.SkipLast(1).ToArray();
             }
-            else { return n; }
+            return a;
+        }
+        private static int Mod(int n, int charac)
+        {
+            if ((n % charac) < 0)
+            {
+                return (n % charac) + charac;
+            }
+            else { return (n % charac); }
         }
         public static FiniteFieldElements operator -(FiniteFieldElements a)
         {
@@ -100,9 +88,9 @@ namespace FiniteFields
             int[] result = new int[deg];
             for(int i=0; i<deg; i++)
             {
-                result[i] = -a.coef[i];
+                result[i] = Mod(-a.coef[i],a.f.p);
             }
-            return new FiniteFieldElements(result, a.f);
+            return new FiniteFieldElements(KillZeros(result), a.f);
         }
 
         public static FiniteFieldElements operator +(FiniteFieldElements a, FiniteFieldElements b)
@@ -117,35 +105,28 @@ namespace FiniteFields
             {
                 result[i] = Mod(a.coef[i] + b.coef[i], a.f.p);
             }
-            return new FiniteFieldElements(result, a.f);
+            return new FiniteFieldElements(KillZeros(result), a.f);
         }
 
         public static FiniteFieldElements operator -(FiniteFieldElements a, FiniteFieldElements b) => a + (-b);
 
-        public static FiniteFieldElements operator %(FiniteFieldElements a, FiniteFieldElements b)
+        public static FiniteFieldElements operator %(int[] a, FiniteFieldElements b)
         {
-            if (!a.f.Equals(b.f))
-                throw new InvalidOperationException();
-            int n = (int)a.coef.Length - 1;
+            if(a.Length < b.coef.Length) { return new FiniteFieldElements(a,b.f); }
+            int n = (int)a.Length - 1;
             int m = (int)b.coef.Length - 1;
-            int[] result = a.coef;
+            int[] result = a;
             int[] Q = new int[n - m + 1];
             for (int i = n; i >= m; i--)
             {
-                Q[i - m] = Mod(result[i] * (int)Math.Pow(b.coef[m],a.f.p-2), a.f.p);
+                Q[i - m] = Mod(result[i] * (int)Math.Pow(b.coef[m],b.f.p-2), b.f.p);
                 for (int j = m; j >= 0; j--) 
                 {
-                    result[i - m + j] -= b.coef[j] * Q[i - m];
-                    result[i - m + j] = Mod(result[i - m + j], a.f.p);
+                    result[i - m + j] = Mod(result[i - m + j] - b.coef[j] * Q[i - m], b.f.p);
                 }
             }
             Array.Resize(ref result, m);
-            while ( result[result.Length - 1] == 0 )
-            {
-                if (result.Length - 1 == 0) break;
-                result = result.SkipLast(1).ToArray();
-            }
-            return new FiniteFieldElements(result, a.f);
+            return new FiniteFieldElements(KillZeros(result), b.f);
 
         }
         public static FiniteFieldElements operator *(FiniteFieldElements a, FiniteFieldElements b)
@@ -161,7 +142,7 @@ namespace FiniteFields
                     result[i + j] = Mod(result[i+j] + a.coef[i] * b.coef[j],a.f.p);
                 }
             }
-            FiniteFieldElements res = new FiniteFieldElements(result, a.f) % new FiniteFieldElements(a.f.q,a.f);
+            FiniteFieldElements res = result % new FiniteFieldElements(a.f.q,a.f);
             return res;
         }
 
@@ -169,30 +150,38 @@ namespace FiniteFields
         {
             int deg = power % ((int)Math.Pow(f.p, f.n) - 1);
             if (deg == 0) return f.Create1();
-            if (deg == 1) return this;
+            if(deg % 2 == 0) 
+            {
+                var temp = Power(deg / 2);
+                return (temp * temp);
+            }
             else
             {
-                return (Power(deg / 2) * Power(deg / 2));
+                return this * Power(deg - 1);
             }
         }
-        public FiniteFieldElements Reversed()
+        public FiniteFieldElements Inverse()
         {
             return this.Power((int)Math.Pow(f.p, f.n) - 2);
         }
-        public static FiniteFieldElements operator /(FiniteFieldElements a, FiniteFieldElements b) => a * b.Reversed();
+        public static FiniteFieldElements operator /(FiniteFieldElements a, FiniteFieldElements b) => a * b.Inverse();
 
         public byte[] GetToBinary()
-        { 
-            int deg = 0;
-            int el = 0;
-            for (int i = coef.Length - 1; i >= 0; i--)
-                el += coef[i] * (int)Math.Pow(f.p, deg++);
-            if (f.p == 2)
-            {
-                return BitConverter.GetBytes(el);
-            }
-            else
-                throw new Exception("Поле должно быть характеристики 2");
+        {
+            if (f.p != 2) throw new Exception("Поле должно быть характеристики 2");
+            return BitConverter.GetBytes(Gorner(2,coef)); 
+        }
+        private int Gorner(int x, int[] a, int i = 0)
+        {
+            if (i >= a.Length)
+                return 0;
+            return a[i] + x * Gorner(x, a, i + 1);
         }
     }
+
+    public class Program
+    {
+        public static void Main(string[] args) { }
+    }
+
 }
