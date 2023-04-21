@@ -60,7 +60,7 @@ namespace FiniteFields
         public FiniteField f { get; set; }
         public FiniteFieldElement(int[] coef, FiniteField f)
         {
-            if (coef.Length - 1 > f.n) 
+            if (coef.Length > f.n) 
                 throw new Exception("Размерность элемента не совпадает с размерностью заданного поля");
             this.coef = coef;
             this.f = f;
@@ -99,14 +99,16 @@ namespace FiniteFields
         {
             if (!a.f.Equals(b.f))
                 throw new InvalidOperationException();
-            int[] remainder = a.coef;
-            int deg = Math.Max(remainder.Length, b.coef.Length);
-            int lim = Math.Min(remainder.Length, b.coef.Length);
-            int[] result;
-            _ = (remainder.Length == deg) ? result = remainder : result = b.coef;
+            int deg = Math.Max(a.coef.Length, b.coef.Length);
+            int lim = Math.Min(a.coef.Length, b.coef.Length);
+            int[] result = new int[deg];
+            if (a.coef.Length == deg)
+                a.coef.CopyTo(result,0);
+            else
+                b.coef.CopyTo(result,0);
             for (int i = 0; i < lim; i++)
             {
-                result[i] = Mod(remainder[i] + b.coef[i], a.f.p);
+                result[i] = Mod(a.coef[i] + b.coef[i], a.f.p);
             }
             return new FiniteFieldElement(KillZeros(result), a.f);
         }
